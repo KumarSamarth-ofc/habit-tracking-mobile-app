@@ -1,24 +1,25 @@
-import { AuthProvider } from "@/lib/auth-context";
-import { Stack, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Slot } from "expo-router";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect } from "react";
 
 function RouteGaurd({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const isAuth = false; // should come from your auth context or logic
+  
+  const { user,isLoadingUser } = useAuth();
 
+  const segments = useSegments();
+  
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const inAuthGroup = segments[0] === "auth"
 
-  useEffect(() => {
-    if (mounted && !isAuth) {
+    if (!user && !inAuthGroup && !isLoadingUser) {
       router.replace("/auth");
-    }
-  }, [mounted]);
 
-  if (!mounted) return null; // or a splash screen
+    } else if (user && inAuthGroup && !isLoadingUser) {
+      router.replace("/");
+    }
+  },[user, segments, ]);
+
   return <>{children}</>;
 }
 
@@ -33,3 +34,5 @@ export default function RootLayout() {
     </AuthProvider>
   );
 }
+
+
